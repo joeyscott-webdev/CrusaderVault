@@ -1,15 +1,26 @@
 import { type ReactNode } from 'react'
-import { Shield, Coins, Bell, Settings, UserCircle2 } from 'lucide-react'
+import { Shield, Swords, Bell, Settings, UserCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useCrusade } from '@/lib/CrusadeContext'
+import type { PageId } from '@/App'
 
-const NAV_ITEMS = ['Home', 'Campaigns', 'Rosters', 'Units', 'Profile'] as const
+const NAV: { label: string; page: PageId | null }[] = [
+  { label: 'Home', page: null },
+  { label: 'Campaigns', page: null },
+  { label: 'Rosters', page: 'dashboard' },
+  { label: 'Game Mode', page: 'game' },
+  { label: 'Profile', page: null },
+]
 
 interface AppShellProps {
   children: ReactNode
-  activeNav?: (typeof NAV_ITEMS)[number]
+  activePage: PageId
+  onNavigate: (page: PageId) => void
 }
 
-export function AppShell({ children, activeNav = 'Rosters' }: AppShellProps) {
+export function AppShell({ children, activePage, onNavigate }: AppShellProps) {
+  const { force } = useCrusade()
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
@@ -22,32 +33,47 @@ export function AppShell({ children, activeNav = 'Rosters' }: AppShellProps) {
           </div>
 
           <nav className="flex items-center gap-6">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item}
-                href="#"
-                className={cn(
-                  'relative py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground',
-                  item === activeNav && 'text-glow-crimson',
-                )}
-              >
-                {item}
-                {item === activeNav && (
-                  <span className="absolute inset-x-0 -bottom-px h-0.5 bg-crimson shadow-[0_0_8px_var(--crimson-glow)]" />
-                )}
-              </a>
-            ))}
+            {NAV.map(({ label, page }) => {
+              const isActive = page !== null && page === activePage
+              return (
+                <button
+                  key={label}
+                  onClick={() => page && onNavigate(page)}
+                  className={cn(
+                    'relative py-4 text-xs font-semibold uppercase tracking-widest transition-colors',
+                    page
+                      ? isActive
+                        ? 'text-glow-crimson cursor-default'
+                        : 'text-muted-foreground hover:text-foreground cursor-pointer'
+                      : 'text-muted-foreground cursor-not-allowed opacity-50',
+                  )}
+                >
+                  {label}
+                  {isActive && (
+                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-crimson shadow-[0_0_8px_var(--crimson-glow)]" />
+                  )}
+                </button>
+              )
+            })}
           </nav>
         </div>
 
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2 text-sm font-semibold tracking-wide">
-            <Coins className="size-4 text-crimson-bright" />
-            <span>8,477 pts</span>
+          <div className="flex items-center gap-2">
+            <Swords className="size-4 text-crimson-bright" />
+            <span className="text-xs font-semibold uppercase tracking-widest">
+              {force.battleTally.battlesWon}W /&nbsp;
+              {force.battleTally.battlesLost}L /&nbsp;
+              {force.battleTally.battlesDrawn}D
+            </span>
           </div>
-          <Bell className="size-4 text-muted-foreground hover:text-foreground" />
-          <Settings className="size-4 text-muted-foreground hover:text-foreground" />
-          <UserCircle2 className="size-5 text-muted-foreground hover:text-foreground" />
+          <div className="h-4 w-px bg-border" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-crimson-bright">
+            {force.requisitionPoints} RP
+          </span>
+          <Bell className="size-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+          <Settings className="size-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+          <UserCircle2 className="size-5 text-muted-foreground hover:text-foreground cursor-pointer" />
         </div>
       </header>
 
