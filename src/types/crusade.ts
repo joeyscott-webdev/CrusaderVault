@@ -74,6 +74,7 @@ export interface GameSession {
   id: string
   missionName: string
   missionType: string
+  gamePts: number
   battleRound: number
   commandPoints: number
   opponentCommandPoints: number
@@ -81,6 +82,27 @@ export interface GameSession {
   opponentVictoryPoints: number
   units: GameUnit[]
   isComplete: boolean
+}
+
+export interface BattleUnitSummary {
+  unitId: string
+  unitName: string
+  kills: number
+  status: GameUnitStatus
+  xpGained: number
+  markedForGreatness: boolean
+}
+
+export interface BattleRecord {
+  id: string
+  playedAt: string
+  missionName: string
+  missionType: string
+  gamePts: number
+  result: BattleResult
+  yourVP: number
+  opponentVP: number
+  unitSummaries: BattleUnitSummary[]
 }
 
 // XP thresholds for each rank (10th Ed Crusade)
