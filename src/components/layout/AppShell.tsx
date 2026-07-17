@@ -1,80 +1,101 @@
-import { type ReactNode } from 'react'
-import { Shield, Swords, Bell, Settings, UserCircle2 } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { Shield, Swords, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCrusade } from '@/lib/CrusadeContext'
-import type { PageId } from '@/App'
 
-const NAV: { label: string; page: PageId | null }[] = [
-  { label: 'Home', page: null },
-  { label: 'Campaigns', page: null },
-  { label: 'Rosters', page: 'dashboard' },
-  { label: 'Game Mode', page: 'game' },
-  { label: 'Profile', page: null },
-]
-
-interface AppShellProps {
-  children: ReactNode
-  activePage: PageId
-  onNavigate: (page: PageId) => void
+interface Crumb {
+  label: string
+  href?: string
 }
 
-export function AppShell({ children, activePage, onNavigate }: AppShellProps) {
-  const { force } = useCrusade()
+interface AppShellProps {
+  children: React.ReactNode
+  breadcrumbs?: Crumb[]
+}
 
+export function AppShell({ children, breadcrumbs }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-3">
+          <NavLink to="/" className="flex items-center gap-2 shrink-0">
             <Shield className="size-5 text-crimson-bright" />
             <span className="text-sm font-bold uppercase tracking-[0.2em]">
               Crusader<span className="text-glow-crimson">Vault</span>
             </span>
-          </div>
+          </NavLink>
 
-          <nav className="flex items-center gap-6">
-            {NAV.map(({ label, page }) => {
-              const isActive = page !== null && page === activePage
-              return (
-                <button
-                  key={label}
-                  onClick={() => page && onNavigate(page)}
-                  className={cn(
-                    'relative py-4 text-xs font-semibold uppercase tracking-widest transition-colors',
-                    page
-                      ? isActive
-                        ? 'text-glow-crimson cursor-default'
-                        : 'text-muted-foreground hover:text-foreground cursor-pointer'
-                      : 'text-muted-foreground cursor-not-allowed opacity-50',
-                  )}
-                >
-                  {label}
+          <div className="h-4 w-px bg-border" />
+
+          <nav className="flex items-center gap-1">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                cn(
+                  'relative px-3 py-2 text-xs font-semibold uppercase tracking-widest transition-colors',
+                  isActive
+                    ? 'text-glow-crimson'
+                    : 'text-muted-foreground hover:text-foreground',
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  Home
                   {isActive && (
                     <span className="absolute inset-x-0 -bottom-px h-0.5 bg-crimson shadow-[0_0_8px_var(--crimson-glow)]" />
                   )}
-                </button>
-              )
-            })}
+                </>
+              )}
+            </NavLink>
+            <NavLink
+              to="/crusades"
+              className={({ isActive }) =>
+                cn(
+                  'relative px-3 py-2 text-xs font-semibold uppercase tracking-widest transition-colors',
+                  isActive
+                    ? 'text-glow-crimson'
+                    : 'text-muted-foreground hover:text-foreground',
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  Crusades
+                  {isActive && (
+                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-crimson shadow-[0_0_8px_var(--crimson-glow)]" />
+                  )}
+                </>
+              )}
+            </NavLink>
           </nav>
+
+          <div className="ml-auto">
+            <Swords className="size-4 text-crimson-bright/60" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <Swords className="size-4 text-crimson-bright" />
-            <span className="text-xs font-semibold uppercase tracking-widest">
-              {force.battleTally.battlesWon}W /&nbsp;
-              {force.battleTally.battlesLost}L /&nbsp;
-              {force.battleTally.battlesDrawn}D
-            </span>
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <div className="mx-auto flex max-w-7xl items-center gap-1 px-6 pb-2">
+            {breadcrumbs.map((crumb, i) => (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <ChevronRight className="size-3 text-muted-foreground/50" />}
+                {crumb.href ? (
+                  <NavLink
+                    to={crumb.href}
+                    className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                  >
+                    {crumb.label}
+                  </NavLink>
+                ) : (
+                  <span className="text-[10px] uppercase tracking-widest text-foreground/80">
+                    {crumb.label}
+                  </span>
+                )}
+              </span>
+            ))}
           </div>
-          <div className="h-4 w-px bg-border" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-crimson-bright">
-            {force.requisitionPoints} RP
-          </span>
-          <Bell className="size-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-          <Settings className="size-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-          <UserCircle2 className="size-5 text-muted-foreground hover:text-foreground cursor-pointer" />
-        </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>
