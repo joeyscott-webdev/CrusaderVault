@@ -13,15 +13,93 @@ import { MISSION_SIZES, getRankFromXp, RANK_MAX_HONOURS } from '@/types'
 
 const EMOJI_PRESETS = ['🛡️', '⚔️', '🚀', '💥', '🎯', '💀', '🔱', '🦾', '👑', '🏹', '🛸', '🗡️']
 const DATASHEET_SUGGESTIONS = [
+  // Space Marines
   'Intercessor Squad', 'Assault Intercessor Squad', 'Infiltrator Squad', 'Incursor Squad',
   'Scout Squad', 'Eliminator Squad', 'Eradicator Squad', 'Aggressor Squad',
-  'Terminator Squad', 'Bladeguard Veteran Squad', 'Sternguard Veteran Squad',
-  'Vanguard Veteran Squad', 'Lieutenant', 'Captain', 'Chaplain', 'Librarian',
-  'Techmarine', 'Apothecary', 'Ancient', 'Company Champion', 'Judiciar',
+  'Terminator Squad', 'Bladeguard Veteran Squad', 'Sternguard Veteran Squad', 'Vanguard Veteran Squad',
+  'Lieutenant', 'Captain', 'Chaplain', 'Librarian', 'Techmarine', 'Apothecary',
+  'Ancient', 'Company Champion', 'Judiciar',
   'Redemptor Dreadnought', 'Brutalis Dreadnought', 'Ballistus Dreadnought',
   'Repulsor', 'Repulsor Executioner', 'Gladiator Lancer', 'Gladiator Reaper',
   'Land Raider', 'Land Raider Crusader', 'Predator Annihilator', 'Vindicator',
   'Impulsor', 'Drop Pod', 'Stormraven Gunship', 'Storm Speeder Thunderstrike',
+  // Chaos Space Marines
+  'Chaos Space Marines', 'Legionaries', 'Chaos Cultists', 'Chaos Spawn', 'Possessed',
+  'Chaos Lord', 'Sorcerer', 'Dark Apostle', 'Master of Executions', 'Warpsmith',
+  'Chaos Dreadnought', 'Defiler', 'Forgefiend', 'Maulerfiend', 'Heldrake',
+  'Obliterators', 'Mutilators', 'Terminators (Chaos)',
+  // Death Guard
+  'Plague Marines', 'Poxwalkers', 'Blightlord Terminators', 'Deathshroud Terminators',
+  'Daemon Prince of Nurgle', 'Malignant Plaguecaster', 'Plague Surgeon', 'Lord of Virulence',
+  'Bloat-drone', 'Plagueburst Crawler', 'Foetid Bloat-drone',
+  // Thousand Sons
+  'Rubric Marines', 'Scarab Occult Terminators', 'Tzaangors',
+  'Infernal Master', 'Sorcerer (Thousand Sons)', 'Exalted Sorcerer',
+  'Mutalith Vortex Beast', 'Maulerfiend (Thousand Sons)',
+  // World Eaters
+  'Berzerkers', 'Jakhals', 'Exalted Eightbound', 'Eightbound',
+  'Lord Invocatus', 'World Eaters Daemon Prince', 'Khârn the Betrayer',
+  // Necrons
+  'Necron Warriors', 'Immortals', 'Lychguard', 'Deathmarks', 'Flayed Ones',
+  'Triarch Praetorians', 'Triarch Stalker', 'Canoptek Scarab Swarms',
+  'Canoptek Spyder', 'Canoptek Reanimator', 'Canoptek Wraiths',
+  'Overlord', 'Royal Warden', 'Cryptek', 'Chronomancer', 'Plasmancer', 'Psychomancer',
+  'Skorpekh Lord', 'Skorpekh Destroyers', 'Ophydian Destroyers', 'Canoptek Doomstalker',
+  'Doomsday Ark', 'Ghost Ark', 'Monolith', 'Annihilation Barge', 'Doom Scythe', 'Night Scythe',
+  // Orks
+  'Boyz', 'Gretchin', 'Nobz', 'Kommandos', 'Stormboyz', 'Tankbustas', 'Flash Gitz', 'Burna Boyz',
+  'Meganobz', 'Beast Snagga Boyz', 'Squighog Boyz',
+  'Warboss', 'Big Mek', 'Weirdboy', 'Painboy', 'Nob with Waaagh! Banner',
+  'Killa Kans', 'Deff Dreads', 'Morkanaut', 'Gorkanaut', 'Battlewagon', 'Trukk', 'Bonebreaka',
+  // Tyranids
+  'Tyranid Warriors', 'Hormagaunts', 'Termagants', 'Gargoyles', 'Genestealers', 'Raveners',
+  'Von Ryan\'s Leapers', 'Neurolictor', 'Barbgaunts',
+  'Hive Tyrant', 'The Swarmlord', 'Broodlord', 'Neurotyrant', 'Neurothrope', 'Zoanthropes',
+  'Carnifex', 'Haruspex', 'Exocrine', 'Tyrannofex', 'Trygon', 'Mawloc', 'Screamer-Killer',
+  // Genestealer Cults
+  'Acolyte Hybrids', 'Neophyte Hybrids', 'Hybrid Metamorphs', 'Aberrants',
+  'Patriarch', 'Magus', 'Primus', 'Nexos', 'Kelermorph',
+  // Aeldari
+  'Guardians', 'Rangers', 'Dire Avengers', 'Fire Dragons', 'Howling Banshees',
+  'Striking Scorpions', 'Dark Reapers', 'Shining Spears', 'Swooping Hawks', 'Warp Spiders',
+  'Wraithguard', 'Wraithblades', 'Wraithlord', 'War Walker',
+  'Farseer', 'Warlock', 'Autarch', 'Spiritseer', 'Illic Nightspear',
+  'Falcon', 'Wave Serpent', 'Vyper', 'Night Spinner', 'Fire Prism', 'Wraithknight',
+  // Drukhari
+  'Kabalite Warriors', 'Wyches', 'Wracks', 'Incubi', 'Mandrakes', 'Hellions', 'Reavers',
+  'Grotesques', 'Scourges', 'Beastmaster',
+  'Archon', 'Haemonculus', 'Succubus', 'Drazhar',
+  'Raider', 'Ravager', 'Venom', 'Tantalus',
+  // T\'au Empire
+  'Fire Warriors Strike Team', 'Fire Warriors Breacher Team', 'Pathfinder Team',
+  'Kroot Carnivores', 'Kroot Hounds', 'Vespid Stingwings', 'Kroot Farstalkers',
+  'Commander', 'Cadre Fireblade', 'Ethereal', 'Commander Shadowsun',
+  'Crisis Battlesuits', 'Stealth Battlesuits', 'Ghostkeel Battlesuit',
+  'Riptide Battlesuit', 'Stormsurge', 'Hammerhead Gunship', 'Devilfish',
+  // Adeptus Mechanicus
+  'Skitarii Rangers', 'Skitarii Vanguard', 'Sicarian Ruststalkers', 'Sicarian Infiltrators',
+  'Ironstrider Ballistarii', 'Sydonian Dragoons', 'Onager Dunecrawler',
+  'Tech-Priest Dominus', 'Tech-Priest Enginseer', 'Manipulus', 'Cybernetica Datasmith',
+  // Astra Militarum
+  'Infantry Squad', 'Heavy Weapons Squad', 'Special Weapons Squad', 'Command Squad',
+  'Tempestus Scions', 'Bullgryns', 'Ogryns', 'Ratlings', 'Sentinel',
+  'Company Commander', 'Lord Solar', 'Commissar', 'Primaris Psyker',
+  'Leman Russ Battle Tank', 'Baneblade', 'Hellhound', 'Chimera', 'Valkyrie',
+  // Adepta Sororitas
+  'Battle Sisters Squad', 'Dominion Squad', 'Retributor Squad', 'Zephyrim Squad',
+  'Seraphim Squad', 'Repentia Squad', 'Celestian Sacresants',
+  'Canoness', 'Palatine', 'Dialogus', 'Imagifier', 'Dogmata', 'Hospitaller',
+  'Penitent Engines', 'Mortifiers', 'Immolator', 'Rhino (Sisters)',
+  // Grey Knights
+  'Grey Knight Strike Squad', 'Grey Knight Terminator Squad', 'Interceptor Squad',
+  'Purgation Squad', 'Paladin Squad',
+  'Brother-Captain', 'Grand Master', 'Librarian (Grey Knights)', 'Chaplain (Grey Knights)',
+  'Nemesis Dreadknight',
+  // Chaos Daemons
+  'Bloodletters', 'Plaguebearers', 'Pink Horrors', 'Daemonettes',
+  'Flesh Hounds', 'Nurglings', 'Beasts of Nurgle', 'Seekers of Slaanesh',
+  'Bloodthirster', 'Great Unclean One', 'Lord of Change', 'Keeper of Secrets',
+  'Skull Cannon', 'Soul Grinder',
 ]
 
 const RANK_COLOR: Record<string, string> = {
@@ -265,7 +343,7 @@ function AddUnitModal({
           <input
             list="ds-list"
             className={`w-full rounded border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-crimson focus:outline-none ${errors.datasheet ? 'border-crimson/70' : 'border-border'}`}
-            placeholder="e.g. Intercessor Squad"
+            placeholder="e.g. Intercessor Squad, Plague Marines, Necron Warriors..."
             value={datasheetName}
             onChange={(e) => { setDatasheetName(e.target.value); setErrors((p) => ({ ...p, datasheet: '' })) }}
           />
