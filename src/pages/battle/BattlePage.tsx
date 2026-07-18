@@ -396,8 +396,8 @@ function PostBattleAAR({
                       {unit.xp} → {newXp}
                     </p>
                     <p className="text-[9px] text-muted-foreground/60">
-                      {Math.floor(bu.killsMadeThisBattle / 3)} kill XP
-                      {bu.markedForGreatness ? ' +1 MFG' : ''}
+                      1 participation +{Math.floor(bu.killsMadeThisBattle / 3)} kill XP
+                      {bu.markedForGreatness ? ' +3 MFG' : ''}
                     </p>
                   </div>
                 </div>
@@ -406,7 +406,7 @@ function PostBattleAAR({
                 {bu.markedForGreatness && (
                   <div className="mb-2 flex items-center gap-1.5 text-[10px] text-yellow-400">
                     <Star className="size-3 fill-yellow-400" />
-                    Marked for Greatness (+1 XP)
+                    Marked for Greatness (+3 XP)
                   </div>
                 )}
 

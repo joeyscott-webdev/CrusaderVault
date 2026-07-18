@@ -139,6 +139,6 @@ export function xpForNextRank(rank: CrusadeRank): number {
 
 export function calcBattleXp(gu: BattleUnit): number {
   const killXp = Math.floor(gu.killsMadeThisBattle / 3)
-  const mfgXp = gu.markedForGreatness ? 1 : 0
-  return killXp + mfgXp
+  const mfgXp = gu.markedForGreatness ? 3 : 0
+  return 1 + killXp + mfgXp
 }
