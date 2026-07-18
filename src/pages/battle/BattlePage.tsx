@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   Swords, Star, ChevronRight,
@@ -30,6 +30,63 @@ function cycleStatus(current: BattleUnitStatus): BattleUnitStatus {
   return STATUS_ORDER[(idx + 1) % STATUS_ORDER.length]
 }
 
+// ── MFG Seal Pop-and-Fly Overlay ──────────────────────────────────────────────
+
+function MfgSealOverlay({ targetRect, onDone }: { targetRect: DOMRect; onDone: () => void }) {
+  const [animState, setAnimState] = useState<'pop' | 'fly'>('pop')
+  const [visible, setVisible] = useState(false)
+
+  const cx = window.innerWidth / 2
+  const cy = window.innerHeight / 2
+  const tx = targetRect.right - 40 - cx
+  const ty = targetRect.top + 40 - cy
+
+  useEffect(() => {
+    const ra = requestAnimationFrame(() => setVisible(true))
+    const t1 = setTimeout(() => setAnimState('fly'), 900)
+    const t2 = setTimeout(onDone, 1500)
+    return () => { cancelAnimationFrame(ra); clearTimeout(t1); clearTimeout(t2) }
+  }, [onDone])
+
+  const sealStyle: React.CSSProperties =
+    animState === 'pop'
+      ? {
+          transform: `scale(${visible ? 1 : 0}) rotate(${visible ? 0 : -15}deg)`,
+          opacity: visible ? 1 : 0,
+          transition: visible
+            ? 'transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease'
+            : 'none',
+        }
+      : {
+          transform: `translate(${tx}px, ${ty}px) scale(0.13) rotate(5deg)`,
+          opacity: 0.9,
+          transition: 'transform 550ms cubic-bezier(0.4, 0, 0.2, 1), opacity 550ms ease',
+        }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+      <div
+        className="absolute inset-0 bg-black/40"
+        style={{ opacity: animState === 'pop' ? 1 : 0, transition: 'opacity 500ms ease' }}
+      />
+      <div
+        className="absolute size-96 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, oklch(0.58 0.22 25 / 0.3) 0%, transparent 70%)',
+          opacity: animState === 'pop' && visible ? 1 : 0,
+          transition: 'opacity 500ms ease',
+        }}
+      />
+      <img
+        src="/mfg-seal.png"
+        alt="Marked for Greatness"
+        className="w-72 h-72 object-contain"
+        style={sealStyle}
+      />
+    </div>
+  )
+}
+
 // ── In-Progress Unit Card ─────────────────────────────────────────────────────
 
 function UnitBattleCard({
@@ -37,16 +94,29 @@ function UnitBattleCard({
   unit,
   mfgTaken: mfgTakenByAnother,
   onUpdate,
+  onMfgActivated,
 }: {
   battleUnit: { unitId: string; status: BattleUnitStatus; killsMadeThisBattle: number; markedForGreatness: boolean }
   unit: { name: string; imageEmoji: string; datasheetName: string; battleHonours: Array<{ id: string; name: string; type: string; description: string }>; battleScars: Array<{ id: string; name: string; effect: string }> }
   mfgTaken: boolean
   onUpdate: (patch: Partial<typeof battleUnit>) => void
+  onMfgActivated: (rect: DOMRect) => void
 }) {
   const [showDetails, setShowDetails] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className={cn('panel-angled border bg-card', STATUS_STYLE[battleUnit.status])}>
+    <div className="relative" ref={cardRef}>
+      {battleUnit.markedForGreatness && (
+        <div className="absolute -top-4 -right-4 z-20 pointer-events-none">
+          <img
+            src="/mfg-seal.png"
+            alt=""
+            className="w-14 h-14 object-contain drop-shadow-lg animate-seal-badge"
+          />
+        </div>
+      )}
+      <div className={cn('panel-angled border bg-card', STATUS_STYLE[battleUnit.status])}>
       <div className="p-3">
         {/* Unit header */}
         <div className="mb-3 flex items-center gap-3">
@@ -107,7 +177,11 @@ function UnitBattleCard({
         <button
           onClick={() => {
             if (!battleUnit.markedForGreatness && mfgTakenByAnother) return
-            onUpdate({ markedForGreatness: !battleUnit.markedForGreatness })
+            const willMark = !battleUnit.markedForGreatness
+            onUpdate({ markedForGreatness: willMark })
+            if (willMark && cardRef.current) {
+              onMfgActivated(cardRef.current.getBoundingClientRect())
+            }
           }}
           disabled={!battleUnit.markedForGreatness && mfgTakenByAnother}
           className={cn(
@@ -155,6 +229,7 @@ function UnitBattleCard({
           ))}
         </div>
       )}
+    </div>
     </div>
   )
 }
@@ -322,7 +397,7 @@ function PostBattleAAR({
                     </p>
                     <p className="text-[9px] text-muted-foreground/60">
                       {Math.floor(bu.killsMadeThisBattle / 3)} kill XP
-                      {bu.markedForGreatness ? ' +3 MFG' : ''}
+                      {bu.markedForGreatness ? ' +1 MFG' : ''}
                     </p>
                   </div>
                 </div>
@@ -331,7 +406,7 @@ function PostBattleAAR({
                 {bu.markedForGreatness && (
                   <div className="mb-2 flex items-center gap-1.5 text-[10px] text-yellow-400">
                     <Star className="size-3 fill-yellow-400" />
-                    Marked for Greatness (+3 XP)
+                    Marked for Greatness (+1 XP)
                   </div>
                 )}
 
@@ -466,6 +541,7 @@ export function BattlePage() {
   const b = battle
   const a = army
   const mfgTaken = battleUnits.some((bu) => bu.markedForGreatness)
+  const [mfgAnimRect, setMfgAnimRect] = useState<DOMRect | null>(null)
 
   function updateBattleUnit(unitId: string, patch: Partial<typeof battleUnits[0]>) {
     updateBattle(b.id, {
@@ -621,6 +697,9 @@ export function BattlePage() {
 
     return (
       <AppShell breadcrumbs={breadcrumbs}>
+        {mfgAnimRect && (
+          <MfgSealOverlay targetRect={mfgAnimRect} onDone={() => setMfgAnimRect(null)} />
+        )}
         <div className="mb-6">
           <h1 className="text-xl font-black uppercase tracking-widest text-foreground">
             {b.missionName}
@@ -754,6 +833,7 @@ export function BattlePage() {
                 unit={unit}
                 mfgTaken={mfgTaken && !bu.markedForGreatness}
                 onUpdate={(patch) => updateBattleUnit(bu.unitId, patch)}
+                onMfgActivated={(rect) => setMfgAnimRect(rect)}
               />
             ) : null,
           )}
