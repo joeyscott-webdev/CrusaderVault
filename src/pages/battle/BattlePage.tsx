@@ -72,7 +72,10 @@ function UnitBattleCard({
 
         {/* Kills counter */}
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Kills</span>
+          <div>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Kills</span>
+            <span className="ml-1 text-[9px] text-muted-foreground/50">(3=1xp)</span>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onUpdate({ killsMadeThisBattle: Math.max(0, battleUnit.killsMadeThisBattle - 1) })}
@@ -81,9 +84,16 @@ function UnitBattleCard({
             >
               <Minus className="size-3" />
             </button>
-            <span className="w-6 text-center text-sm font-bold text-foreground">
-              {battleUnit.killsMadeThisBattle}
-            </span>
+            <div className="flex w-10 flex-col items-center">
+              <span className="text-sm font-bold text-foreground leading-none">
+                {battleUnit.killsMadeThisBattle}
+              </span>
+              {battleUnit.killsMadeThisBattle > 0 && (
+                <span className="text-[8px] text-crimson-bright/70">
+                  +{Math.floor(battleUnit.killsMadeThisBattle / 3)}xp
+                </span>
+              )}
+            </div>
             <button
               onClick={() => onUpdate({ killsMadeThisBattle: battleUnit.killsMadeThisBattle + 1 })}
               className="flex size-6 items-center justify-center rounded border border-border text-muted-foreground hover:border-muted-foreground"
@@ -309,6 +319,10 @@ function PostBattleAAR({
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                       {unit.xp} → {newXp}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60">
+                      {Math.floor(bu.killsMadeThisBattle / 3)} kill XP
+                      {bu.markedForGreatness ? ' +3 MFG' : ''}
                     </p>
                   </div>
                 </div>
