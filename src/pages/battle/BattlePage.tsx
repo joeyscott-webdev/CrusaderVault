@@ -322,7 +322,7 @@ function PostBattleAAR({
                     </p>
                     <p className="text-[9px] text-muted-foreground/60">
                       {Math.floor(bu.killsMadeThisBattle / 3)} kill XP
-                      {bu.markedForGreatness ? ' +3 MFG' : ''}
+                      {bu.markedForGreatness ? ' +1 MFG' : ''}
                     </p>
                   </div>
                 </div>
