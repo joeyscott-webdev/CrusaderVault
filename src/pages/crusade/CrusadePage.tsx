@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   Plus, Swords, Users, Shield, Trash2, ChevronRight,
-  AlertTriangle, X,
+  AlertTriangle, X, Pencil,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAppStore } from '@/lib/StoreContext'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { Army, MissionType } from '@/types'
+import type { Army, MissionType, BattleResult } from '@/types'
 import { MISSION_SIZES, getRankFromXp, RANK_MAX_HONOURS } from '@/types'
 
 const EMOJI_PRESETS = ['🛡️', '⚔️', '🚀', '💥', '🎯', '💀', '🔱', '🦾', '👑', '🏹', '🛸', '🗡️']
@@ -384,6 +384,148 @@ function AddUnitModal({
   )
 }
 
+// ── Edit Battle Modal ─────────────────────────────────────────────────────────
+
+function EditBattleModal({
+  battle,
+  onClose,
+}: {
+  battle: ReturnType<typeof useAppStore>['battles'][0]
+  onClose: () => void
+}) {
+  const { updateBattle } = useAppStore()
+  const [missionName, setMissionName] = useState(battle.missionName)
+  const [missionType, setMissionType] = useState<MissionType>(battle.missionType)
+  const [gamePts, setGamePts] = useState(battle.gamePts)
+  const [result, setResult] = useState<BattleResult | null>(battle.result)
+  const [yourVP, setYourVP] = useState(battle.yourVP)
+  const [opponentVP, setOpponentVP] = useState(battle.opponentVP)
+  const [error, setError] = useState('')
+
+  function handleSave() {
+    if (!missionName.trim()) { setError('Mission name is required.'); return }
+    const patch: Parameters<typeof updateBattle>[1] = { missionName: missionName.trim(), missionType, gamePts }
+    if (battle.phase === 'complete') {
+      Object.assign(patch, { result, yourVP, opponentVP })
+    }
+    updateBattle(battle.id, patch)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
+      <div className="panel-angled w-full max-w-md border border-border bg-card p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-base font-bold uppercase tracking-widest text-foreground">
+            Edit Battle
+          </h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Mission Name
+          </label>
+          <input
+            autoFocus
+            className={`w-full rounded border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-crimson focus:outline-none ${error ? 'border-crimson/70' : 'border-border'}`}
+            value={missionName}
+            onChange={(e) => { setMissionName(e.target.value); setError('') }}
+          />
+          {error && <p className="mt-1 text-[10px] text-crimson-bright">{error}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Battle Size
+          </label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {MISSION_SIZES.map((m) => (
+              <button
+                key={m.type}
+                onClick={() => { setMissionType(m.type); setGamePts(m.pts) }}
+                className={cn(
+                  'panel-angled flex flex-col items-center gap-1 border px-3 py-2 text-center transition-all',
+                  missionType === m.type
+                    ? 'border-crimson bg-crimson/10 text-crimson-bright'
+                    : 'border-border bg-secondary text-muted-foreground hover:border-muted-foreground',
+                )}
+              >
+                <span className="text-xs font-bold">{m.pts}</span>
+                <span className="text-[9px] uppercase tracking-widest">{m.type}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {battle.phase === 'complete' && (
+          <>
+            <div className="mb-4">
+              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Result
+              </label>
+              <div className="flex gap-2">
+                {(['Win', 'Loss', 'Draw'] as BattleResult[]).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setResult(r)}
+                    className={cn(
+                      'flex-1 rounded border py-1.5 text-xs font-bold uppercase tracking-widest transition-all',
+                      result === r
+                        ? r === 'Win'
+                          ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400'
+                          : r === 'Loss'
+                            ? 'border-crimson/50 bg-crimson/15 text-crimson-bright'
+                            : 'border-yellow-400/50 bg-yellow-400/15 text-yellow-400'
+                        : 'border-border bg-secondary text-muted-foreground hover:border-muted-foreground',
+                    )}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Your VP
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-full rounded border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-crimson focus:outline-none"
+                  value={yourVP}
+                  onChange={(e) => setYourVP(parseInt(e.target.value) || 0)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Opponent VP
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-full rounded border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-crimson focus:outline-none"
+                  value={opponentVP}
+                  onChange={(e) => setOpponentVP(parseInt(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1" onClick={handleSave}>Save Changes</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Create Battle Modal ───────────────────────────────────────────────────────
 
 function CreateBattleModal({
@@ -566,12 +708,13 @@ function CreateBattleModal({
 export function CrusadePage() {
   const { crusadeId } = useParams<{ crusadeId: string }>()
   const navigate = useNavigate()
-  const { crusades, armies, units, battles, removeCrusade, updateArmy } = useAppStore()
+  const { crusades, armies, units, battles, removeCrusade, updateArmy, removeUnit, removeBattle } = useAppStore()
   const [showCreateArmy, setShowCreateArmy] = useState(false)
   const [showAddUnit, setShowAddUnit] = useState(false)
   const [showCreateBattle, setShowCreateBattle] = useState(false)
+  const [showEditBattle, setShowEditBattle] = useState<string | null>(null)
   const [pendingDeleteUnit, setPendingDeleteUnit] = useState<string | null>(null)
-  const { removeUnit } = useAppStore()
+  const [pendingDeleteBattle, setPendingDeleteBattle] = useState<string | null>(null)
 
   const crusade = crusades.find((c) => c.id === crusadeId)
   const army = armies.find((a) => a.crusadeId === crusadeId)
@@ -626,6 +769,10 @@ export function CrusadePage() {
           }}
         />
       )}
+      {showEditBattle && (() => {
+        const eb = battles.find((b) => b.id === showEditBattle)
+        return eb ? <EditBattleModal battle={eb} onClose={() => setShowEditBattle(null)} /> : null
+      })()}
 
       {/* Crusade header */}
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -901,44 +1048,91 @@ export function CrusadePage() {
                     month: 'short',
                     year: 'numeric',
                   })
-                  return (
-                    <Link
-                      key={battle.id}
-                      to={`/crusades/${crusadeId}/battles/${battle.id}`}
-                      className="panel-angled group flex flex-wrap items-center gap-4 border border-border bg-card px-4 py-3 transition-all hover:border-muted-foreground"
-                    >
-                      <span className={cn('rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest', BATTLE_PHASE_STYLE[battle.phase])}>
-                        {battle.result && battle.phase === 'complete'
-                          ? battle.result
-                          : BATTLE_PHASE_LABEL[battle.phase]}
-                      </span>
 
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="text-sm font-semibold text-foreground">
-                          {battle.missionName}
-                        </span>
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                          {battle.missionType} · {battle.gamePts} pts · {battle.units.length} units
-                        </span>
+                  if (pendingDeleteBattle === battle.id) {
+                    return (
+                      <div key={battle.id} className="panel-angled flex flex-col gap-2 border border-crimson/50 bg-crimson/10 p-3">
+                        <p className="text-xs font-semibold text-foreground">
+                          Delete <span className="text-crimson-bright">{battle.missionName}</span>?
+                        </p>
+                        {battle.phase === 'complete' && (
+                          <p className="text-[10px] text-muted-foreground">
+                            XP and honours already awarded will not be reversed.
+                          </p>
+                        )}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPendingDeleteBattle(null)}
+                            className="flex-1 rounded border border-border py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:border-muted-foreground"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => { removeBattle(battle.id); setPendingDeleteBattle(null) }}
+                            className="flex-1 rounded border border-crimson/50 bg-crimson/10 py-1 text-[10px] font-semibold uppercase tracking-widest text-crimson-bright hover:bg-crimson/20"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
+                    )
+                  }
 
-                      {battle.phase === 'complete' && battle.result && (
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="text-foreground">
-                            <span className="font-bold">{battle.yourVP}</span>
-                            <span className="text-muted-foreground"> VP</span>
+                  return (
+                    <div key={battle.id} className="group relative">
+                      <Link
+                        to={`/crusades/${crusadeId}/battles/${battle.id}`}
+                        className="panel-angled flex flex-wrap items-center gap-4 border border-border bg-card px-4 py-3 transition-all hover:border-muted-foreground"
+                      >
+                        <span className={cn('rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest', BATTLE_PHASE_STYLE[battle.phase])}>
+                          {battle.result && battle.phase === 'complete'
+                            ? battle.result
+                            : BATTLE_PHASE_LABEL[battle.phase]}
+                        </span>
+
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <span className="text-sm font-semibold text-foreground">
+                            {battle.missionName}
                           </span>
-                          <span className="text-muted-foreground">vs</span>
-                          <span className="text-foreground">
-                            <span className="font-bold">{battle.opponentVP}</span>
-                            <span className="text-muted-foreground"> VP</span>
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {battle.missionType} · {battle.gamePts} pts · {battle.units.length} units
                           </span>
                         </div>
-                      )}
 
-                      <span className="text-[10px] text-muted-foreground">{date}</span>
-                      <ChevronRight className="size-4 text-muted-foreground/40 group-hover:text-muted-foreground" />
-                    </Link>
+                        {battle.phase === 'complete' && battle.result && (
+                          <div className="flex items-center gap-3 text-xs">
+                            <span className="text-foreground">
+                              <span className="font-bold">{battle.yourVP}</span>
+                              <span className="text-muted-foreground"> VP</span>
+                            </span>
+                            <span className="text-muted-foreground">vs</span>
+                            <span className="text-foreground">
+                              <span className="font-bold">{battle.opponentVP}</span>
+                              <span className="text-muted-foreground"> VP</span>
+                            </span>
+                          </div>
+                        )}
+
+                        <span className="text-[10px] text-muted-foreground">{date}</span>
+                        <ChevronRight className="size-4 text-muted-foreground/40 group-hover:text-muted-foreground" />
+                      </Link>
+                      <div className="absolute right-1 top-1 hidden items-center gap-0.5 group-hover:flex">
+                        <button
+                          onClick={() => setShowEditBattle(battle.id)}
+                          className="flex size-6 items-center justify-center rounded bg-card text-muted-foreground/50 hover:text-foreground"
+                          title="Edit battle"
+                        >
+                          <Pencil className="size-3" />
+                        </button>
+                        <button
+                          onClick={() => setPendingDeleteBattle(battle.id)}
+                          className="flex size-6 items-center justify-center rounded bg-card text-muted-foreground/50 hover:text-crimson-bright"
+                          title="Delete battle"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      </div>
+                    </div>
                   )
                 })}
 
